@@ -1,486 +1,1027 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight, Users, BookOpen, Target, Presentation, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-
-// Componente de Logo isolado
-const Logo = ({ scrolled }) => (
-  <div className="flex items-center transition-all duration-300 ease-in-out">
-    <img 
-      src="https://drive.google.com/thumbnail?id=1NtZHlpRWqWVArG068776K1fzjVBfpnYR&sz=w400" 
-      alt="2bx Logo" 
-      // Mantive as classes de ajuste de margem.
-      className={`w-auto object-contain transition-all duration-300 ${
-        scrolled 
-          ? 'h-14 md:h-24 -ml-2 md:-ml-4' 
-          : 'h-24 md:h-56 -ml-4 md:-ml-8'
-      }`}
-      onError={(e) => {
-        e.target.style.display = 'none';
-        e.target.nextSibling.style.display = 'flex';
-        e.target.parentElement.classList.remove('-ml-4', 'md:-ml-8', '-ml-2', 'md:-ml-4');
-      }}
-    />
-    <div className="hidden flex-col justify-center leading-none ml-2">
-      <span className={`font-bold text-neutral-900 tracking-tighter transition-all duration-300 ${scrolled ? 'text-xl' : 'text-4xl'}`}>
-        2bx
-      </span>
-      <span className="text-xs font-medium text-orange-600 tracking-widest uppercase">Education</span>
-    </div>
-  </div>
-);
-
-// Componente de Formulário
-const ContactForm = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    interest: 'Treinamento Corporativo',
-    message: ''
-  });
-  const [status, setStatus] = useState('idle');
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setStatus('submitting');
-
-    try {
-      const response = await fetch('https://webhook.2bx.com.br', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          submittedAt: new Date().toISOString(),
-          source: 'Site 2bx'
-        }),
-      });
-
-      if (response.ok || response.status === 200 || response.type === 'opaque') {
-        setStatus('success');
-        setFormData({ name: '', email: '', phone: '', company: '', interest: 'Treinamento Corporativo', message: '' });
-      } else {
-        setStatus('error');
-      }
-    } catch (error) {
-      console.error('Erro ao enviar:', error);
-      setStatus('error');
-    }
-  };
-
-  if (status === 'success') {
-    return (
-      <div className="bg-neutral-50 p-8 md:p-12 rounded-2xl border border-neutral-200 text-center animate-in fade-in zoom-in duration-300 h-full flex flex-col justify-center items-center">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle className="w-10 h-10 text-green-600" />
-        </div>
-        <h3 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-4">Obrigado pelo interesse!</h3>
-        <p className="text-lg text-neutral-600 max-w-md mx-auto mb-8">
-          Recebemos seus dados com sucesso. Nossa equipe entrará em contato em breve para entendermos como podemos ajudar sua empresa.
-        </p>
-        <button 
-          onClick={() => setStatus('idle')}
-          className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors"
-        >
-          Enviar nova mensagem
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-neutral-200/50 border border-neutral-100 relative overflow-hidden">
-      <h3 className="text-2xl font-bold text-neutral-900 mb-6">Agende uma conversa</h3>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium text-neutral-700">Nome completo</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-neutral-50 border border-neutral-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
-              placeholder="Seu nome"
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="phone" className="text-sm font-medium text-neutral-700">Telefone / WhatsApp</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              required
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-neutral-50 border border-neutral-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
-              placeholder="(00) 00000-0000"
-            />
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-neutral-700">E-mail corporativo</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-neutral-50 border border-neutral-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
-              placeholder="voce@empresa.com.br"
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="company" className="text-sm font-medium text-neutral-700">Empresa</label>
-            <input
-              type="text"
-              id="company"
-              name="company"
-              value={formData.company}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-neutral-50 border border-neutral-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
-              placeholder="Nome da sua empresa"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="interest" className="text-sm font-medium text-neutral-700">Tenho interesse em</label>
-          <select
-            id="interest"
-            name="interest"
-            value={formData.interest}
-            onChange={handleChange}
-            className="w-full px-4 py-3 rounded-lg bg-neutral-50 border border-neutral-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all appearance-none cursor-pointer"
-          >
-            <option value="Treinamento Corporativo">Treinamento Corporativo em IA</option>
-            <option value="Mentoria para Líderes">Mentoria para Líderes</option>
-            <option value="Consultoria de Processos">Consultoria de Processos & Automação</option>
-            <option value="Workshop Inovação">Workshop de Inovação</option>
-            <option value="Outros">Outros assuntos</option>
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="message" className="text-sm font-medium text-neutral-700">Mensagem (opcional)</label>
-          <textarea
-            id="message"
-            name="message"
-            rows="3"
-            value={formData.message}
-            onChange={handleChange}
-            className="w-full px-4 py-3 rounded-lg bg-neutral-50 border border-neutral-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all resize-none"
-            placeholder="Conte um pouco sobre seu desafio atual..."
-          ></textarea>
-        </div>
-
-        <button
-          type="submit"
-          disabled={status === 'submitting'}
-          className="w-full bg-neutral-900 text-white font-bold py-4 rounded-lg hover:bg-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
-        >
-          {status === 'submitting' ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Enviando...
-            </>
-          ) : (
-            <>
-              Solicitar Contato
-              <Send className="w-5 h-5" />
-            </>
-          )}
-        </button>
-
-        {status === 'error' && (
-          <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-center gap-3 text-red-700 text-sm animate-in fade-in slide-in-from-top-2">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p>Ocorreu um erro ao enviar. Por favor, tente novamente ou contate-nos diretamente pelo e-mail.</p>
-          </div>
-        )}
-        
-        <p className="text-xs text-neutral-400 text-center mt-4">
-          Seus dados estão seguros. Não enviamos spam.
-        </p>
-      </form>
-    </div>
-  );
-};
-
-const App = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  const scrollToSection = (id) => {
-    setIsMenuOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  return (
-    <div className="font-sans text-neutral-900 bg-white selection:bg-orange-100 selection:text-orange-900">
-      
-      {/* Navigation */}
-      <nav 
-        className={`fixed w-full z-50 transition-all duration-300 border-b ${
-          scrolled 
-            ? 'bg-white/95 backdrop-blur border-neutral-200 py-3 shadow-sm' 
-            : 'bg-white/90 border-transparent py-4 md:py-8 backdrop-blur-sm'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <div className="cursor-pointer" onClick={() => scrollToSection('hero')}>
-              <Logo scrolled={scrolled} />
-            </div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2bx Consultoria | Education & AI</title>
+    <meta name="description" content="Consultoria estratégica e treinamentos corporativos em Inteligência Artificial.">
+    
+    <style>
+        /* --- RESET E VARIÁVEIS --- */
+        :root {
+            --color-neutral-50: #fafafa;
+            --color-neutral-100: #f5f5f5;
+            --color-neutral-200: #e5e5e5;
+            --color-neutral-400: #a3a3a3;
+            --color-neutral-500: #737373;
+            --color-neutral-600: #525252;
+            --color-neutral-800: #262626;
+            --color-neutral-900: #171717;
+            --color-neutral-950: #0a0a0a;
             
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center gap-12">
-              <button onClick={() => scrollToSection('sobre')} className="text-sm font-medium text-neutral-600 hover:text-orange-600 tracking-wide transition-colors">A CONSULTORIA</button>
-              <button onClick={() => scrollToSection('servicos')} className="text-sm font-medium text-neutral-600 hover:text-orange-600 tracking-wide transition-colors">TREINAMENTOS</button>
-              <button onClick={() => scrollToSection('metodologia')} className="text-sm font-medium text-neutral-600 hover:text-orange-600 tracking-wide transition-colors">METODOLOGIA</button>
-              <button 
-                onClick={() => scrollToSection('contato')} 
-                className={`bg-neutral-900 text-white px-6 py-2.5 text-sm font-medium hover:bg-orange-600 transition-all rounded-sm ${
-                  scrolled ? 'shadow-md' : ''
-                }`}
-              >
-                AGENDAR
-              </button>
-            </div>
+            --color-orange-100: #ffedd5;
+            --color-orange-200: #fed7aa;
+            --color-orange-500: #f97316;
+            --color-orange-600: #ea580c;
+            --color-orange-700: #c2410c;
 
-            {/* Mobile/Tablet Menu Button */}
-            <div className="lg:hidden">
-              <button onClick={toggleMenu} className="text-neutral-900 p-2">
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
-          </div>
-        </div>
+            --color-green-100: #dcfce7;
+            --color-green-600: #16a34a;
+            --color-red-50: #fef2f2;
+            --color-red-100: #fee2e2;
+            --color-red-700: #b91c1c;
 
-        {/* Mobile Menu Overlay */}
-        {isMenuOpen && (
-          <div className="lg:hidden fixed inset-0 bg-white z-40 pt-32 px-6 animate-in fade-in slide-in-from-top-5 duration-200 overflow-y-auto">
-            <div className="flex flex-col space-y-6 text-xl font-light pb-10">
-              <button onClick={() => scrollToSection('sobre')} className="text-left border-b border-neutral-100 pb-4 hover:text-orange-600">A Consultoria</button>
-              <button onClick={() => scrollToSection('servicos')} className="text-left border-b border-neutral-100 pb-4 hover:text-orange-600">Treinamentos</button>
-              <button onClick={() => scrollToSection('metodologia')} className="text-left border-b border-neutral-100 pb-4 hover:text-orange-600">Metodologia</button>
-              <button onClick={() => scrollToSection('contato')} className="text-left font-medium text-orange-600 pt-2">
-                Falar com Especialista
-              </button>
-            </div>
-          </div>
-        )}
-      </nav>
+            /* Stack de fontes padrão do sistema (igual ao Tailwind font-sans) */
+            --font-main: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            
+            --max-width: 1280px;
+            --header-height-large: 100px;
+            --header-height-small: 70px;
+        }
 
-      {/* Hero Section */}
-      <section id="hero" className="relative pt-48 pb-16 md:pt-64 lg:pt-80 lg:pb-32 px-6 overflow-hidden">
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #ffffff;
+            color: var(--color-neutral-900);
+            line-height: 1.5;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased; /* Suavização de fonte */
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::selection {
+            background-color: var(--color-orange-100);
+            color: var(--color-orange-700);
+        }
+
+        a { text-decoration: none; color: inherit; }
+        button { cursor: pointer; border: none; background: none; font-family: inherit; }
+        ul { list-style: none; }
+
+        /* --- UTILITÁRIOS --- */
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .section-padding {
+            padding: 5rem 0;
+        }
+
+        @media (min-width: 1024px) {
+            .section-padding { padding: 8rem 0; }
+        }
+
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .flex-col { flex-direction: column; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .grid { display: grid; }
         
-        {/* Conteúdo com Z-Index maior */}
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="max-w-4xl animate-in slide-in-from-bottom-10 duration-700 fade-in">
-            <div className="w-12 h-1 bg-orange-600 mb-8"></div>
-            <h1 className="text-3xl md:text-6xl lg:text-7xl font-bold tracking-tight text-neutral-900 mb-6 md:mb-8 leading-snug md:leading-[1.1]">
-              Sua equipe pronta<br className="hidden md:block" />
-              para a era da <span className="text-orange-600">IA.</span>
-            </h1>
-            <p className="text-lg md:text-xl text-neutral-500 max-w-2xl leading-relaxed font-light mb-10 md:mb-12">
-              Consultoria estratégica e treinamentos corporativos para líderes que desejam criar uma cultura de alta performance usando Inteligência Artificial.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
-              <button 
-                onClick={() => scrollToSection('servicos')}
-                className="group flex items-center gap-3 text-base md:text-lg font-medium text-neutral-900 hover:text-orange-600 transition-colors"
-              >
-                Conhecer programas de treinamento
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform text-orange-600" />
-              </button>
+        .text-center { text-align: center; }
+        .text-orange { color: var(--color-orange-600); }
+        .font-bold { font-weight: 700; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-widest { letter-spacing: 0.1em; }
+
+        /* --- ÍCONES SVG --- */
+        .icon {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        /* --- HEADER & NAV --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid transparent;
+        }
+
+        header.scrolled {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid var(--color-neutral-200);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-content {
+            height: var(--header-height-large);
+            transition: height 0.3s ease;
+        }
+
+        header.scrolled .nav-content {
+            height: var(--header-height-small);
+        }
+
+        /* Logo Transition */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .logo-img {
+            width: auto;
+            object-fit: contain;
+            transition: all 0.3s ease;
+            margin-left: -1rem; 
+            height: 96px; /* Inicial Desktop */
+        }
+
+        header.scrolled .logo-img {
+            height: 48px; /* Scrolled Desktop */
+            margin-left: -0.5rem;
+        }
+
+        .logo-text-fallback {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1;
+            margin-left: 0.5rem;
+        }
+
+        /* Desktop Menu */
+        .desktop-menu {
+            display: none;
+        }
+
+        .nav-link {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-neutral-600);
+            transition: color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-link:hover {
+            color: var(--color-orange-600);
+        }
+
+        .btn-primary {
+            background-color: var(--color-neutral-900);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-orange-600);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: block;
+            color: var(--color-neutral-900);
+        }
+
+        /* Mobile Menu Overlay */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: white;
+            z-index: 999;
+            padding-top: 120px;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .mobile-menu.open {
+            transform: translateY(0);
+        }
+
+        .mobile-link {
+            font-size: 1.25rem;
+            font-weight: 300;
+            border-bottom: 1px solid var(--color-neutral-100);
+            padding-bottom: 1rem;
+            color: var(--color-neutral-800);
+        }
+
+        /* --- HERO SECTION --- */
+        #hero {
+            padding-top: 180px;
+            padding-bottom: 4rem;
+        }
+
+        .hero-line {
+            width: 3rem;
+            height: 0.25rem;
+            background-color: var(--color-orange-600);
+            margin-bottom: 2rem;
+        }
+
+        .hero-title {
+            font-size: 1.875rem; /* Mobile: 3xl */
+            line-height: 1.375;  /* leading-snug */
+            font-weight: 700;    /* Bold normal */
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.025em; /* tracking-tight */
+        }
+
+        .hero-desc {
+            font-size: 1.125rem; /* text-lg */
+            color: var(--color-neutral-500);
+            max-width: 42rem;
+            margin-bottom: 2.5rem;
+            font-weight: 300;
+            line-height: 1.625;
+        }
+
+        /* --- STATS BANNER --- */
+        .stats-banner {
+            border-top: 1px solid var(--color-neutral-100);
+            border-bottom: 1px solid var(--color-neutral-100);
+            background-color: rgba(250, 250, 250, 0.5);
+            padding: 3rem 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            padding-left: 1.5rem;
+            border-left: 2px solid var(--color-neutral-200);
+            transition: border-color 0.3s;
+        }
+
+        .stat-item:hover {
+            border-color: var(--color-orange-500);
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--color-neutral-400);
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-neutral-900);
+        }
+
+        /* --- SOBRE --- */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+
+        .sticky-col {
+            position: relative;
+        }
+
+        .section-label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--color-neutral-400);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .section-heading {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-item {
+            border-top: 1px solid var(--color-neutral-200);
+            padding-top: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            transition: color 0.2s;
+        }
+
+        .feature-item:hover .feature-title {
+            color: var(--color-orange-600);
+        }
+
+        /* --- SERVIÇOS (DARK) --- */
+        #servicos {
+            background-color: var(--color-neutral-950);
+            color: white;
+        }
+
+        .services-header {
+            border-bottom: 1px solid var(--color-neutral-800);
+            padding-bottom: 2rem;
+            margin-bottom: 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            background-color: var(--color-neutral-800);
+            gap: 1px; /* Cria as bordas */
+            border: 1px solid var(--color-neutral-800);
+        }
+
+        .service-card {
+            background-color: var(--color-neutral-900);
+            padding: 2rem;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+
+        .service-card:hover {
+            background-color: var(--color-neutral-950);
+        }
+
+        .service-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background-color: var(--color-orange-600);
+            transition: height 0.3s;
+        }
+
+        .service-card:hover .service-bar {
+            height: 100%;
+        }
+
+        .service-icon {
+            color: var(--color-orange-600);
+            margin-bottom: 1.5rem;
+        }
+
+        .service-features li {
+            font-size: 0.875rem;
+            color: var(--color-neutral-500);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            background-color: var(--color-orange-600);
+            border-radius: 50%;
+        }
+
+        /* --- METODOLOGIA --- */
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .step-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--color-neutral-200);
+            font-family: monospace;
+            margin-bottom: 1rem;
+            transition: color 0.3s;
+        }
+
+        .timeline-item:hover .step-number {
+            color: var(--color-orange-200);
+        }
+
+        .timeline-line {
+            display: none; /* Apenas desktop */
+        }
+
+        /* --- CONTATO & FORM --- */
+        #contato {
+            background-color: var(--color-neutral-50);
+            border-top: 1px solid var(--color-neutral-100);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--color-neutral-100);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-neutral-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            background-color: var(--color-neutral-50);
+            border: 1px solid var(--color-neutral-200);
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--color-orange-500);
+            box-shadow: 0 0 0 2px var(--color-orange-200);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--color-neutral-900);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--color-orange-600);
+        }
+
+        /* Mensagens de Feedback */
+        .feedback-message {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .feedback-message.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background-color: white;
+            padding: 3rem 0;
+            border-top: 1px solid var(--color-neutral-100);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--color-neutral-400);
+        }
+
+        /* --- RESPONSIVIDADE (MEDIA QUERIES) --- */
+        @media (min-width: 768px) {
+            .hero-title { 
+                font-size: 3.75rem; /* Tablet: 6xl */
+                line-height: 1.1; 
+            }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .services-grid { grid-template-columns: 1fr 1fr; }
+            .timeline-grid { grid-template-columns: repeat(4, 1fr); }
+            .timeline-line {
+                display: block;
+                position: absolute;
+                top: 2rem;
+                left: 100%;
+                width: 100%;
+                height: 1px;
+                background-color: var(--color-neutral-200);
+            }
+            .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        }
+
+        @media (min-width: 1024px) {
+            .menu-toggle { display: none; }
+            .desktop-menu { display: flex; gap: 3rem; align-items: center; }
+            .mobile-menu { display: none; } /* Nunca mostra no desktop */
+            
+            #hero { padding-top: 220px; }
+            .hero-title { 
+                font-size: 4.5rem; /* Desktop: 7xl */
+                margin-bottom: 2rem; 
+            }
+            .hero-desc { font-size: 1.25rem; } /* text-xl */
+            
+            .about-grid { grid-template-columns: 1fr 1fr; }
+            .sticky-col { position: sticky; top: 140px; align-self: start; }
+            
+            .services-header { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+            
+            .contact-grid { grid-template-columns: 1fr 1fr; }
+            .form-container { margin-top: 0; }
+            
+            .logo-img { height: 224px; margin-left: -2rem; } /* Grande no desktop */
+            header.scrolled .logo-img { height: 80px; margin-left: -1rem; }
+        }
+        
+        /* Loading Spinner Animation */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <header id="navbar">
+        <div class="container nav-content flex justify-between items-center">
+            <div class="logo-container" onclick="scrollToSection('hero')">
+                <img 
+                    src="https://drive.google.com/thumbnail?id=1NtZHlpRWqWVArG068776K1fzjVBfpnYR&sz=w400" 
+                    alt="2bx Logo" 
+                    class="logo-img"
+                    onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'; this.parentElement.style.marginLeft='0';"
+                >
+                <div id="logo-fallback" class="logo-text-fallback">
+                    <span style="font-size: 1.875rem; font-weight: 700; color: var(--color-neutral-900); letter-spacing: -0.05em;">2bx</span>
+                    <span style="font-size: 0.625rem; font-weight: 500; color: var(--color-orange-600); text-transform: uppercase; letter-spacing: 0.1em;">Education</span>
+                </div>
             </div>
-          </div>
+
+            <!-- Desktop Menu -->
+            <nav class="desktop-menu">
+                <a href="#sobre" class="nav-link">A Consultoria</a>
+                <a href="#servicos" class="nav-link">Treinamentos</a>
+                <a href="#metodologia" class="nav-link">Metodologia</a>
+                <button onclick="scrollToSection('contato')" class="btn-primary">AGENDAR</button>
+            </nav>
+
+            <!-- Mobile Menu Button -->
+            <button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir Menu">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
+            </button>
         </div>
-      </section>
+    </header>
 
-      {/* Stats / Trust Banner */}
-      <div className="border-y border-neutral-100 bg-white/50 backdrop-blur-sm relative z-10">
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            {[
-              { label: "Líderes Impactados", value: "Mentoria" },
-              { label: "Equipes Treinadas", value: "Capacitação" },
-              { label: "Cultura Transformada", value: "Inovação" },
-            ].map((stat, i) => (
-              <div key={i} className="flex flex-col border-l-2 border-neutral-200 pl-6 hover:border-orange-500 transition-colors duration-300">
-                <span className="text-xs md:text-sm font-semibold uppercase tracking-widest text-neutral-400 mb-1">{stat.label}</span>
-                <span className="text-xl md:text-2xl font-bold text-neutral-900">{stat.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="mobile-menu">
+        <button onclick="toggleMenu()" style="position: absolute; top: 1.5rem; right: 1.5rem;">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <a href="#sobre" class="mobile-link" onclick="toggleMenu()">A Consultoria</a>
+        <a href="#servicos" class="mobile-link" onclick="toggleMenu()">Treinamentos</a>
+        <a href="#metodologia" class="mobile-link" onclick="toggleMenu()">Metodologia</a>
+        <a href="#contato" class="mobile-link" onclick="toggleMenu()" style="color: var(--color-orange-600); font-weight: 500;">Falar com Especialista</a>
+    </div>
 
-      {/* Sobre - Layout */}
-      <section id="sobre" className="py-20 lg:py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-            <div className="relative lg:sticky lg:top-32">
-              <h2 className="text-xs md:text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">01 — Quem Somos</h2>
-              <h3 className="text-3xl md:text-4xl font-bold leading-tight mb-6">
-                A tecnologia é commodity.<br/>O diferencial é a estratégia.
-              </h3>
-              <p className="text-lg text-neutral-600 leading-relaxed">
-                Na 2bx, acreditamos que ferramentas de IA e automação só geram valor quando estão nas mãos de profissionais capacitados. Nosso foco é a educação corporativa e o desenho de processos eficientes, preparando o terreno humano para a transformação digital.
-              </p>
-            </div>
-            <div className="grid gap-10 md:gap-12">
-              <div className="border-t border-neutral-200 pt-6 md:pt-8 group">
-                <h4 className="text-lg md:text-xl font-bold mb-3 group-hover:text-orange-600 transition-colors">Letramento em IA</h4>
-                <p className="text-neutral-600">Desmistificamos a inteligência artificial para que todos os colaboradores, do estagiário ao CEO, saibam utilizá-la no dia a dia.</p>
-              </div>
-              <div className="border-t border-neutral-200 pt-6 md:pt-8 group">
-                <h4 className="text-lg md:text-xl font-bold mb-3 group-hover:text-orange-600 transition-colors">Cultura Data-Driven</h4>
-                <p className="text-neutral-600">Ensinamos times a tomarem decisões baseadas em dados, abandonando o "achismo" e aumentando a assertividade.</p>
-              </div>
-              <div className="border-t border-neutral-200 pt-6 md:pt-8 group">
-                <h4 className="text-lg md:text-xl font-bold mb-3 group-hover:text-orange-600 transition-colors">Gestão da Mudança</h4>
-                <p className="text-neutral-600">Preparamos psicologicamente e tecnicamente sua empresa para adotar novas ferramentas sem resistência interna.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Serviços - Grid Escuro */}
-      <section id="servicos" className="bg-neutral-950 text-white py-20 lg:py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-16 md:mb-20 border-b border-neutral-800 pb-8 flex flex-col md:flex-row justify-between items-end gap-6">
-            <div>
-              <h2 className="text-xs md:text-sm font-bold text-orange-500 uppercase tracking-widest mb-4">02 — O Que Fazemos</h2>
-              <h3 className="text-3xl md:text-5xl font-bold">Nossos Programas</h3>
-            </div>
-            <p className="text-neutral-400 max-w-sm text-right md:text-left text-sm md:text-base">
-              Formatos flexíveis: In-company, Online ou Híbrido.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-px bg-neutral-800 border border-neutral-800">
-            {[
-              {
-                icon: <Users className="w-8 h-8 mb-6 text-orange-500" />,
-                title: "Treinamento de Equipes em IA",
-                desc: "Workshops práticos ensinando como usar ChatGPT, Copilot e outras ferramentas para aumentar a produtividade individual e coletiva.",
-                features: ["Prompt Engineering", "IA para Marketing e Vendas", "Automação de Tarefas Pessoais"]
-              },
-              {
-                icon: <Target className="w-8 h-8 mb-6 text-orange-500" />,
-                title: "Mentoria para Líderes",
-                desc: "Sessões exclusivas para diretores e gerentes entenderem o impacto estratégico da IA e como liderar a transformação em seus setores.",
-                features: ["Visão Estratégica de IA", "Governança e Ética", "Tomada de Decisão Ágil"]
-              },
-              {
-                icon: <Presentation className="w-8 h-8 mb-6 text-orange-500" />,
-                title: "Consultoria de Processos",
-                desc: "Antes de automatizar, é preciso organizar. Mapeamos fluxos de trabalho e redesenhamos processos para eliminar ineficiências.",
-                features: ["Mapeamento AS-IS / TO-BE", "Identificação de Gargalos", "Preparação para Automação"]
-              },
-              {
-                icon: <BookOpen className="w-8 h-8 mb-6 text-orange-500" />,
-                title: "Workshops de Inovação",
-                desc: "Imersões 'mão na massa' onde resolvemos problemas reais da empresa utilizando metodologias ágeis e ferramentas digitais.",
-                features: ["Hackathons Internos", "Design Thinking + IA", "Prototipagem de Soluções"]
-              }
-            ].map((service, idx) => (
-              <div key={idx} className="bg-neutral-900 p-8 md:p-12 hover:bg-neutral-950 transition-colors group cursor-default relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-0 bg-orange-600 group-hover:h-full transition-all duration-300"></div>
-                {service.icon}
-                <h4 className="text-xl md:text-2xl font-bold mb-4 group-hover:text-orange-500 transition-colors">{service.title}</h4>
-                <p className="text-neutral-400 mb-8 leading-relaxed text-sm md:text-base">
-                  {service.desc}
+    <!-- HERO -->
+    <section id="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-line"></div>
+                <h1 class="hero-title">
+                    Sua equipe pronta<br>
+                    para a era da <span class="text-orange">IA.</span>
+                </h1>
+                <p class="hero-desc">
+                    Consultoria estratégica e treinamentos corporativos para líderes que desejam criar uma cultura de alta performance usando Inteligência Artificial.
                 </p>
-                <ul className="space-y-3">
-                  {service.features.map((feat, fIdx) => (
-                    <li key={fIdx} className="text-sm text-neutral-500 flex items-center gap-3">
-                      <span className="w-1 h-1 bg-orange-500 rounded-full"></span>
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Seção de Contato com Formulário */}
-      <section id="contato" className="py-20 lg:py-32 px-6 bg-neutral-50 border-t border-neutral-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-start">
-            <div>
-              <h2 className="text-xs md:text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">Contato</h2>
-              <h3 className="text-3xl md:text-5xl font-bold text-neutral-900 mb-6 leading-tight">
-                Prepare sua empresa para o futuro.
-              </h3>
-              <p className="text-lg text-neutral-600 mb-8 max-w-lg">
-                Seja para treinar sua equipe, capacitar líderes ou otimizar processos, estamos prontos para desenhar a solução ideal para o seu negócio.
-              </p>
-              
-              <div className="flex flex-col gap-6 items-start">
-                <div>
-                  <h4 className="font-bold text-neutral-900 mb-2">E-mail Direto</h4>
-                  <a href="mailto:contato@2bx.com.br" className="text-xl md:text-2xl text-neutral-900 border-b-2 border-neutral-900 pb-1 hover:text-orange-600 hover:border-orange-600 transition-all break-all">
-                    contato@2bx.com.br
-                  </a>
+                <div class="flex flex-col gap-4" style="flex-direction: row; gap: 1rem; align-items: center;">
+                    <button onclick="scrollToSection('servicos')" class="btn-primary" style="background: transparent; color: var(--color-neutral-900); padding: 0; box-shadow: none; font-size: 1.125rem;">
+                        Conhecer programas de treinamento 
+                        <svg class="icon" style="width: 20px; height: 20px; margin-left: 0.5rem; color: var(--color-orange-600);" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
                 </div>
+            </div>
+        </div>
+    </section>
 
-                <div>
-                   <h4 className="font-bold text-neutral-900 mb-2">Localização</h4>
-                   <p className="text-neutral-500">
-                    São Paulo, SP<br />Brasil
-                   </p>
+    <!-- STATS -->
+    <div class="stats-banner">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Mentoria</span>
+                    <span class="stat-value">Líderes Impactados</span>
                 </div>
-              </div>
+                <div class="stat-item">
+                    <span class="stat-label">Capacitação</span>
+                    <span class="stat-value">Equipes Treinadas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Inovação</span>
+                    <span class="stat-value">Cultura Transformada</span>
+                </div>
             </div>
-            
-            {/* Componente do Formulário Inserido Aqui */}
-            <div className="lg:mt-0 mt-8">
-              <ContactForm />
-            </div>
-          </div>
         </div>
-      </section>
-
-      {/* Footer Minimalista */}
-      <footer className="bg-white py-12 px-6 border-t border-neutral-100">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-center items-center gap-6">
-           <div className="text-sm text-neutral-400">
-             © {new Date().getFullYear()} 2bx Education. Todos os direitos reservados.
-           </div>
-        </div>
-      </footer>
     </div>
-  );
-};
 
-export default App;
+    <!-- SOBRE -->
+    <section id="sobre" class="section-padding">
+        <div class="container">
+            <div class="about-grid">
+                <div class="sticky-col">
+                    <span class="section-label">01 — Quem Somos</span>
+                    <h2 class="section-heading">
+                        A tecnologia é commodity.<br>O diferencial é a estratégia.
+                    </h2>
+                    <p style="color: var(--color-neutral-600); font-size: 1.125rem;">
+                        Na 2bx, acreditamos que ferramentas de IA e automação só geram valor quando estão nas mãos de profissionais capacitados. Nosso foco é a educação corporativa e o desenho de processos eficientes, preparando o terreno humano para a transformação digital.
+                    </p>
+                </div>
+                <div>
+                    <div class="feature-item">
+                        <h3 class="feature-title">Letramento em IA</h3>
+                        <p style="color: var(--color-neutral-600);">Desmistificamos a inteligência artificial para que todos os colaboradores, do estagiário ao CEO, saibam utilizá-la no dia a dia.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3 class="feature-title">Cultura Data-Driven</h3>
+                        <p style="color: var(--color-neutral-600);">Ensinamos times a tomarem decisões baseadas em dados, abandonando o "achismo" e aumentando a assertividade.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3 class="feature-title">Gestão da Mudança</h3>
+                        <p style="color: var(--color-neutral-600);">Preparamos psicologicamente e tecnicamente sua empresa para adotar novas ferramentas sem resistência interna.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVIÇOS -->
+    <section id="servicos" class="section-padding">
+        <div class="container">
+            <div class="services-header">
+                <div>
+                    <span class="section-label" style="color: var(--color-orange-500);">02 — O Que Fazemos</span>
+                    <h2 class="section-heading" style="margin-bottom: 0;">Nossos Programas</h2>
+                </div>
+                <p style="color: var(--color-neutral-400);">Formatos flexíveis: In-company, Online ou Híbrido.</p>
+            </div>
+
+            <div class="services-grid">
+                <!-- Card 1 -->
+                <div class="service-card">
+                    <div class="service-bar"></div>
+                    <div class="service-icon">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700;">Treinamento de Equipes</h3>
+                    <p style="color: var(--color-neutral-400); margin-bottom: 1.5rem;">Workshops práticos ensinando como usar ChatGPT, Copilot e outras ferramentas para aumentar a produtividade.</p>
+                    <ul class="service-features">
+                        <li><div class="dot"></div>Prompt Engineering</li>
+                        <li><div class="dot"></div>IA para Marketing e Vendas</li>
+                        <li><div class="dot"></div>Automação de Tarefas</li>
+                    </ul>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="service-card">
+                    <div class="service-bar"></div>
+                    <div class="service-icon">
+                        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700;">Mentoria para Líderes</h3>
+                    <p style="color: var(--color-neutral-400); margin-bottom: 1.5rem;">Sessões exclusivas para diretores entenderem o impacto estratégico da IA e como liderar a transformação.</p>
+                    <ul class="service-features">
+                        <li><div class="dot"></div>Visão Estratégica de IA</li>
+                        <li><div class="dot"></div>Governança e Ética</li>
+                        <li><div class="dot"></div>Tomada de Decisão Ágil</li>
+                    </ul>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="service-card">
+                    <div class="service-bar"></div>
+                    <div class="service-icon">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700;">Consultoria de Processos</h3>
+                    <p style="color: var(--color-neutral-400); margin-bottom: 1.5rem;">Mapeamos fluxos de trabalho e redesenhamos processos para eliminar ineficiências antes de automatizar.</p>
+                    <ul class="service-features">
+                        <li><div class="dot"></div>Mapeamento AS-IS / TO-BE</li>
+                        <li><div class="dot"></div>Identificação de Gargalos</li>
+                        <li><div class="dot"></div>Preparação para Automação</li>
+                    </ul>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="service-card">
+                    <div class="service-bar"></div>
+                    <div class="service-icon">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700;">Workshops de Inovação</h3>
+                    <p style="color: var(--color-neutral-400); margin-bottom: 1.5rem;">Imersões 'mão na massa' onde resolvemos problemas reais da empresa utilizando metodologias ágeis.</p>
+                    <ul class="service-features">
+                        <li><div class="dot"></div>Hackathons Internos</li>
+                        <li><div class="dot"></div>Design Thinking + IA</li>
+                        <li><div class="dot"></div>Prototipagem de Soluções</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- METODOLOGIA -->
+    <section id="metodologia" class="section-padding" style="background-color: var(--color-neutral-50);">
+        <div class="container">
+            <h2 class="section-heading text-center" style="margin-bottom: 4rem;">03 — Jornada de Aprendizado</h2>
+            
+            <div class="timeline-grid">
+                <div class="timeline-item sticky-col">
+                    <div class="step-number">01</div>
+                    <div class="timeline-line"></div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Diagnóstico</h3>
+                    <p style="font-size: 0.875rem; color: var(--color-neutral-600);">Avaliamos a maturidade digital da equipe e identificamos gaps de competência.</p>
+                </div>
+                <div class="timeline-item sticky-col">
+                    <div class="step-number">02</div>
+                    <div class="timeline-line"></div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Personalização</h3>
+                    <p style="font-size: 0.875rem; color: var(--color-neutral-600);">Criamos trilhas de conteúdo adaptadas à realidade do seu mercado.</p>
+                </div>
+                <div class="timeline-item sticky-col">
+                    <div class="step-number">03</div>
+                    <div class="timeline-line"></div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Capacitação</h3>
+                    <p style="font-size: 0.875rem; color: var(--color-neutral-600);">Execução dos treinamentos com foco total em aplicabilidade prática.</p>
+                </div>
+                <div class="timeline-item sticky-col">
+                    <div class="step-number">04</div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Acompanhamento</h3>
+                    <p style="font-size: 0.875rem; color: var(--color-neutral-600);">Mentoria pós-treinamento para garantir a adoção das novas práticas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTATO -->
+    <section id="contato" class="section-padding">
+        <div class="container">
+            <div class="contact-grid">
+                <div>
+                    <span class="section-label">Contato</span>
+                    <h2 class="section-heading">Prepare sua empresa para o futuro.</h2>
+                    <p style="color: var(--color-neutral-600); margin-bottom: 2rem; font-size: 1.125rem;">
+                        Seja para treinar sua equipe, capacitar líderes ou otimizar processos, estamos prontos para desenhar a solução ideal para o seu negócio.
+                    </p>
+                    
+                    <div class="flex flex-col gap-6">
+                        <div>
+                            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">E-mail Direto</h4>
+                            <a href="mailto:contato@2bx.com.br" style="font-size: 1.25rem; border-bottom: 2px solid var(--color-neutral-900);">contato@2bx.com.br</a>
+                        </div>
+                        <div>
+                            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Localização</h4>
+                            <p style="color: var(--color-neutral-600);">São Paulo, SP<br>Brasil</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <div id="form-content">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Agende uma conversa</h3>
+                        <form id="contactForm" onsubmit="submitForm(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="name">Nome completo</label>
+                                    <input class="form-input" type="text" id="name" name="name" placeholder="Seu nome" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="phone">Telefone / WhatsApp</label>
+                                    <input class="form-input" type="tel" id="phone" name="phone" placeholder="(00) 00000-0000" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="email">E-mail corporativo</label>
+                                    <input class="form-input" type="email" id="email" name="email" placeholder="voce@empresa.com.br" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="company">Empresa</label>
+                                    <input class="form-input" type="text" id="company" name="company" placeholder="Nome da empresa">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="interest">Tenho interesse em</label>
+                                <select class="form-select" id="interest" name="interest">
+                                    <option value="Treinamento Corporativo">Treinamento Corporativo em IA</option>
+                                    <option value="Mentoria para Líderes">Mentoria para Líderes</option>
+                                    <option value="Consultoria de Processos">Consultoria de Processos & Automação</option>
+                                    <option value="Workshop Inovação">Workshop de Inovação</option>
+                                    <option value="Outros">Outros assuntos</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="message">Mensagem (opcional)</label>
+                                <textarea class="form-textarea" id="message" name="message" rows="3" placeholder="Conte um pouco sobre seu desafio atual..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn-submit" id="submitButton">
+                                <span id="btnText">Solicitar Contato</span>
+                                <span id="btnLoader" class="spinner" style="display: none;"></span>
+                                <svg id="btnIcon" class="icon" style="width: 20px; height: 20px;" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                            <p style="font-size: 0.75rem; color: var(--color-neutral-400); text-align: center; margin-top: 1rem;">
+                                Seus dados estão seguros. Não enviamos spam.
+                            </p>
+                        </form>
+                    </div>
+
+                    <!-- Mensagem Sucesso -->
+                    <div id="successMessage" class="feedback-message">
+                        <div style="width: 80px; height: 80px; background-color: var(--color-green-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                            <svg class="icon" style="width: 40px; height: 40px; color: var(--color-green-600);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Obrigado pelo interesse!</h3>
+                        <p style="color: var(--color-neutral-600); margin-bottom: 2rem;">Recebemos seus dados com sucesso. Nossa equipe entrará em contato em breve.</p>
+                        <button onclick="resetForm()" style="color: var(--color-orange-600); font-weight: 700; text-decoration: underline;">Enviar nova mensagem</button>
+                    </div>
+
+                    <!-- Mensagem Erro -->
+                    <div id="errorMessage" style="display: none; padding: 1rem; background-color: var(--color-red-50); border: 1px solid var(--color-red-100); border-radius: 0.5rem; margin-top: 1rem; color: var(--color-red-700); font-size: 0.875rem; align-items: center; gap: 0.5rem;">
+                        <svg class="icon" style="width: 20px; height: 20px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <span>Ocorreu um erro. Tente novamente mais tarde.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            © <script>document.write(new Date().getFullYear())</script> 2bx Education. Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // --- Scroll Logic ---
+        const navbar = document.getElementById('navbar');
+        const logo = document.querySelector('.logo-img');
+        const heroSection = document.getElementById('hero');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // --- Mobile Menu ---
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('open');
+        }
+
+        // --- Smooth Scroll ---
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // --- Form Logic ---
+        async function submitForm(e) {
+            e.preventDefault();
+            
+            const form = document.getElementById('contactForm');
+            const submitBtn = document.getElementById('submitButton');
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const btnIcon = document.getElementById('btnIcon');
+            const errorMsg = document.getElementById('errorMessage');
+            const formContent = document.getElementById('form-content');
+            const successMsg = document.getElementById('successMessage');
+
+            // Loading State
+            submitBtn.disabled = true;
+            btnText.textContent = "Enviando...";
+            btnLoader.style.display = 'inline-block';
+            btnIcon.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            // Gather Data
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.submittedAt = new Date().toISOString();
+            data.source = 'Site 2bx HTML';
+
+            try {
+                // Post to Webhook
+                const response = await fetch('https://webhook.2bx.com.br', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok || response.status === 200 || response.type === 'opaque') {
+                    // Success
+                    formContent.style.display = 'none';
+                    successMsg.classList.add('active');
+                    form.reset();
+                } else {
+                    throw new Error('Erro no envio');
+                }
+            } catch (error) {
+                console.error(error);
+                errorMsg.style.display = 'flex';
+            } finally {
+                // Reset Button
+                submitBtn.disabled = false;
+                btnText.textContent = "Solicitar Contato";
+                btnLoader.style.display = 'none';
+                btnIcon.style.display = 'inline-block';
+            }
+        }
+
+        function resetForm() {
+            const formContent = document.getElementById('form-content');
+            const successMsg = document.getElementById('successMessage');
+            
+            successMsg.classList.remove('active');
+            formContent.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
